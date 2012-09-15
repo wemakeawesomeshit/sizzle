@@ -4,16 +4,24 @@
 </head>
 <body>
   <canvas width="1200" height="600" id="canvasElement"></canvas>
+  <canvas width="1200" height="600" id="canvasOverlay"></canvas>
   
   <script type="text/javascript">
-  
+
     var ctx = canvasElement.getContext('2d');
+    var ctxOverlay = canvasOverlay.getContext('2d');
     var x, y;
     var width = 1200;
     var height = 600
 
     function redraw() {
-      ctx.clearRect(0,0,1200,800);
+      ctx.clearRect(0,0,1200,600);
+      // ctx.fillStyle = "#FEBB26";
+      ctx.fillStyle = "#0144D9";
+      ctx.fillStyle = "#000";
+      
+      ctx.fillRect(0,0,1200,600);
+      
       
       var i = fishes.length;
       while (i--) {
@@ -32,36 +40,61 @@
         fish.y += fish.vy
         
         sh = image.height
-        dh = image.height
+        dh = image.height*0.5
         sy = 0;
         dy = fish.y;
         sx = 0
         dx = fish.x
         sw = image.width
-        dw = image.width
+        dw = image.width*0.5
         ctx.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
       }
     }
     
-    setInterval(redraw, 16.66)
+    setInterval(redraw, 30)
     
-    var greenFish = new Image();
-    greenFish.src = "images/green.png";
-    
-    var blueFish = new Image();
-    blueFish.src = "images/blue.png";
+    function detect() {
+      
+      ctxOverlay.clearRect(0,0,1200,600);
+      ctxOverlay.fillStyle = "rgba(255,255,0,0.25)";
+      
+      var rows = 4;
+      var columns = 8;
+      var rowHeight = height / rows;
+      var columnWidth = width / columns;
+      
+      
+      // for each row
+      for (var y=0; y < rows*rowHeight; y+=rowHeight) {
+        // for each column
+        for (var x=0; x < columns*columnWidth; x+=columnWidth) {
+          var imageData = ctx.getImageData(x,y,columnWidth,rowHeight).data;
+          
+          var total = 0;
+          // for every 4th pixel in the square
+          for (var k=0; k < imageData.length; k+=16) {
+            total += imageData[k] + imageData[k+1] + imageData[k+2];
+          };
+          
+          var numberOfPixels = imageData.length / 16;
+          total = total / numberOfPixels / 3; // 0-255
+          
+          var threshold = 8;
+          if (total > threshold) {
+            ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
+          }
+          // console.log("total is: " + total);
+        };
+      };
+    }
+    setInterval(detect, 1000)
+
     
     var yellowFish = new Image();
     yellowFish.src = "images/yellow.png";
     
     var fishes = [{
-      image: greenFish,
-      x: 100,
-      y: 0,
-      vx: 1.2,
-      vy: 1
-    },{
-      image: blueFish,
+      image: yellowFish,
       x: 0,
       y: 320,
       vx: 1,
@@ -92,5 +125,13 @@
     
     
   </script>
+  
+  <style type="text/css" media="screen">
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
 </body>
 </html>
