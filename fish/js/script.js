@@ -13,20 +13,26 @@ else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUse
 $(document).ready(function() {
 
 	 var onFailSoHard = function(e) {
-	    console.log('Reeeejected!', e);
-	  };
+    console.log('Reeeejected!', e);
+  };
 
-	  // Not showing vendor prefixes.
-	  navigator.getUserMedia({video: true, audio: true}, function(localMediaStream) {
-	    var video = document.getElementById('webcam');
-	    video.src = window.URL.createObjectURL(localMediaStream);
 
-	    // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
-	    // See crbug.com/110938.
-	    video.onloadedmetadata = function(e) {
-	      // Ready to go. Do some stuff.
-	    };
-	  }, onFailSoHard);
+	window.URL = window.URL || window.webkitURL;
+	navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
+	                          navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+	var video = document.querySelector('video');
+
+	if (navigator.getUserMedia) {
+
+		  navigator.getUserMedia({audio: true, video: true}, function(stream) {
+		   video.src = window.URL.createObjectURL(stream);
+		  }, onFailSoHard);
+		
+
+	} else {
+	  video.src = 'somevideo.webm'; // fallback.
+	}
 
 })
 
