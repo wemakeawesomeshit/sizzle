@@ -3,11 +3,110 @@
 <head>
 </head>
 <body>
+
+  <style>
+    #playmarker {
+      width:2px;
+      height:600px;
+      background:#0f0;
+      z-index:99999;
+      position:fixed;
+      top:0;
+      left:0;
+    }
+  </style>
+
+  <div id="playmarker"></div>
+
+
   <canvas width="1200" height="600" id="canvasElement"></canvas>
   <canvas width="1200" height="600" id="canvasOverlay"></canvas>
   
   <script type="text/javascript">
-    var matrix = null;
+var context = new webkitAudioContext();
+
+    
+
+
+
+    var playmarker = document.getElementById("playmarker");
+
+    var width = 1200;
+
+    var activeColumn = -1;
+
+    var rows = 8;
+    var columns = 16;
+
+    var matrix = [];
+
+    for (var i = 0; i < rows; i++) {
+      var arr = [];
+      for (var j = 0; j < columns; j++) {
+        arr.push(false);
+      }
+      matrix.push(arr);
+    }
+
+
+
+    var notes = [
+      "tones/tone1.wav",
+      "tones/tone2.wav",
+      "tones/tone3.wav",
+      "tones/tone4.wav",
+      "tones/tone5.wav",
+      "tones/tone6.wav",
+      "tones/tone7.wav",
+      "tones/tone8.wav",
+    ];
+
+    playNote = function(index) {
+      var audio = new Audio();
+      audio.src = notes[index];
+      audio.position = 0;
+      audio.play();
+    }
+
+
+
+
+
+
+    matrixUpdated = function() {
+
+    }
+
+    columnChange = function() {
+      for (var i = 0, len = matrix[activeColumn].length; i < len; i++) {
+        if (matrix[activeColumn][i] === true) {
+          playNote(i);
+        }
+      }
+    }
+
+
+    movePlaymarker = function() {
+      var left = playmarker.style.left.replace("px", "") * 1 + 10;
+      if (left > width) {
+        left = 0;
+      }
+
+      var newActiveColumn = parseInt(left / (width / columns));
+
+      if (newActiveColumn !== activeColumn) {
+        activeColumn = newActiveColumn;
+        columnChange();
+      }
+
+      playmarker.style.left = left + "px";
+    }
+
+    setInterval(movePlaymarker, 10);
+
+
+
+
 
     var ctx = canvasElement.getContext('2d');
     var ctxOverlay = canvasOverlay.getContext('2d');
@@ -57,10 +156,9 @@
     function detect() {
       
       ctxOverlay.clearRect(0,0,1200,600);
-      ctxOverlay.fillStyle = "rgba(255,255,0,0.25)";
+      ctxOverlay.fillStyle = "rgba(0,255,0,0.5)";
       
-      var rows = 4;
-      var columns = 8;
+      
       var rowHeight = height / rows;
       var columnWidth = width / columns;
       
