@@ -2,6 +2,8 @@
 
 */
 
+var video;
+
 if (navigator.getUserMedia) {}
 else if (navigator.webkitGetUserMedia) { navigator.getUserMedia = navigator.webkitGetUserMedia}
 else if (navigator.mozGetUserMedia) { navigator.getUserMedia = navigator.mozGetUserMedia}
@@ -21,12 +23,13 @@ $(document).ready(function() {
 	navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
 	                          navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-	var video = document.querySelector('video');
+	video = document.querySelector('video');
 
 	if (navigator.getUserMedia) {
 
 		  navigator.getUserMedia({audio: true, video: true}, function(stream) {
 		   video.src = window.URL.createObjectURL(stream);
+		   initialize();
 		  }, onFailSoHard);
 		
 
@@ -35,12 +38,6 @@ $(document).ready(function() {
 	}
 
 })
-
-
-
-
-
-
 
 
 
