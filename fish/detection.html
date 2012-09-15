@@ -7,6 +7,7 @@
   <canvas width="1200" height="600" id="canvasOverlay"></canvas>
   
   <script type="text/javascript">
+    var matrix = null;
 
     var ctx = canvasElement.getContext('2d');
     var ctxOverlay = canvasOverlay.getContext('2d');
@@ -63,9 +64,11 @@
       var rowHeight = height / rows;
       var columnWidth = width / columns;
       
+      var newMatrix = [];
       
       // for each row
       for (var y=0; y < rows*rowHeight; y+=rowHeight) {
+        var row = [];
         // for each column
         for (var x=0; x < columns*columnWidth; x+=columnWidth) {
           var imageData = ctx.getImageData(x,y,columnWidth,rowHeight).data;
@@ -83,9 +86,12 @@
           if (total > threshold) {
             ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
           }
-          // console.log("total is: " + total);
+          row.push(total > threshold);
         };
+        newMatrix.push(row);
       };
+      matrix = newMatrix;
+      matrixUpdated && matrixUpdated(matrix);
     }
     setInterval(detect, 1000)
 
@@ -104,7 +110,7 @@
       x: 170,
       y: 20,
       vx: 1,
-      vy: 1.6
+      vy: 1.2
     }];
 
     function setMouse() {
