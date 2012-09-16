@@ -33,7 +33,7 @@
   <canvas width="200" height="133" id="canvasFiltered"></canvas>
   <canvas width="200" height="133" id="canvasOverlay"></canvas>
   
-  <div id="log" style="position:absolute;top:10px;right:10px;">
+  <div id="config" style="position:absolute;top:10px;right:10px;">
     <p>
       <label>Webcam Left</label>
       <input id="webcamTop" type="range" min="-200" step=1 max="0" />
@@ -50,6 +50,7 @@
       <label>Webcam Height</label>
       <input id="webcamHeight" type="range" min="0" step=1 max="200" />
     </p>
+    <button onclick="$('#config').hide()">Hide config</button>
   </div>
 
   <script type="text/javascript">
