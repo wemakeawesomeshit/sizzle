@@ -19,8 +19,9 @@
   <div id="playmarker"></div>
 
 
-  <canvas width="1200" height="600" id="canvasElement"></canvas>
-  <canvas width="1200" height="600" id="canvasOverlay"></canvas>
+  <canvas width="300" height="150" id="canvasElement"></canvas>
+  <canvas width="300" height="150" id="canvasFiltered"></canvas>
+  <canvas width="300" height="150" id="canvasOverlay"></canvas>
   
   <script type="text/javascript">
 var context = new webkitAudioContext();
@@ -31,13 +32,15 @@ var context = new webkitAudioContext();
 
     var playmarker = document.getElementById("playmarker");
 
-    var width = 1200;
+    var width = 300;
 
     var activeColumn = -1;
 
     var rows = 8;
     var columns = 16;
 
+    var currentMatrix = [];
+    var previousMatrix = [];
     var matrix = [];
 
     for (var i = 0; i < rows; i++) {
@@ -73,36 +76,36 @@ var context = new webkitAudioContext();
 
 
 
-    matrixUpdated = function() {
-
-    }
-
-    columnChange = function() {
-      for (var i = 0, len = matrix[activeColumn].length; i < len; i++) {
-        if (matrix[activeColumn][i] === true) {
-          playNote(i);
-        }
-      }
-    }
-
-
-    movePlaymarker = function() {
-      var left = playmarker.style.left.replace("px", "") * 1 + 10;
-      if (left > width) {
-        left = 0;
-      }
-
-      var newActiveColumn = parseInt(left / (width / columns));
-
-      if (newActiveColumn !== activeColumn) {
-        activeColumn = newActiveColumn;
-        columnChange();
-      }
-
-      playmarker.style.left = left + "px";
-    }
-
-    setInterval(movePlaymarker, 10);
+    // matrixUpdated = function() {
+    // 
+    // }
+    // 
+    // columnChange = function() {
+    //   for (var i = 0, len = matrix[activeColumn].length; i < len; i++) {
+    //     if (matrix[activeColumn][i] === true) {
+    //       playNote(i);
+    //     }
+    //   }
+    // }
+    // 
+    // 
+    // movePlaymarker = function() {
+    //   var left = playmarker.style.left.replace("px", "") * 1 + 10;
+    //   if (left > width) {
+    //     left = 0;
+    //   }
+    // 
+    //   var newActiveColumn = parseInt(left / (width / columns));
+    // 
+    //   if (newActiveColumn !== activeColumn) {
+    //     activeColumn = newActiveColumn;
+    //     columnChange();
+    //   }
+    // 
+    //   playmarker.style.left = left + "px";
+    // }
+    // 
+    // setInterval(movePlaymarker, 10);
 
 
 
@@ -110,17 +113,24 @@ var context = new webkitAudioContext();
 
     var ctx = canvasElement.getContext('2d');
     var ctxOverlay = canvasOverlay.getContext('2d');
+    var ctxFiltered = canvasFiltered.getContext('2d');
+
     var x, y;
-    var width = 1200;
-    var height = 600
+    var width = 300;
+    var height = 150
 
     function redraw() {
-      ctx.clearRect(0,0,1200,600);
+      ctx.clearRect(0,0,300,150);
       // ctx.fillStyle = "#FEBB26";
       ctx.fillStyle = "#0144D9";
       ctx.fillStyle = "#000";
+      ctx.fillStyle = "#00FF00";
       
-      ctx.fillRect(0,0,1200,600);
+      ctx.fillRect(0,0,300,150);
+      
+      var bg = new Image();
+      bg.src = "images/greenbg.jpg";
+      ctx.drawImage(bg, 0, 0, 425, 318, 0, 0, 300, 150)
       
       
       var i = fishes.length;
@@ -128,11 +138,11 @@ var context = new webkitAudioContext();
         var fish = fishes[i];
         var image = fish.image;
         
-        if ((fish.y + image.height) > 600 || fish.y < 0) {
+        if ((fish.y + image.height*0.25) > 150 || fish.y < 0) {
           fish.vy = fish.vy * -1
         }
         
-        if ((fish.x + image.width) > 1200 || fish.x < 0) {
+        if ((fish.x + image.width*0.25) > 300 || fish.x < 0) {
           fish.vx = fish.vx * -1
         }
         
@@ -140,13 +150,13 @@ var context = new webkitAudioContext();
         fish.y += fish.vy
         
         sh = image.height
-        dh = image.height*0.5
+        dh = image.height*0.25
         sy = 0;
         dy = fish.y;
         sx = 0
         dx = fish.x
         sw = image.width
-        dw = image.width*0.5
+        dw = image.width*0.25
         ctx.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
       }
     }
@@ -155,9 +165,13 @@ var context = new webkitAudioContext();
     
     function detect() {
       
-      ctxOverlay.clearRect(0,0,1200,600);
-      ctxOverlay.fillStyle = "rgba(0,255,0,0.5)";
+      ctxOverlay.clearRect(0,0,300,150);
+      ctxOverlay.fillStyle = "rgba(255,255,0,1)";
       
+      var image = ctx.getImageData(0,0,300,150);
+      var filteredImageData = chromaKeyFilter(image);
+      
+      var imageData = image.data;
       
       var rowHeight = height / rows;
       var columnWidth = width / columns;
@@ -169,18 +183,18 @@ var context = new webkitAudioContext();
         var row = [];
         // for each column
         for (var x=0; x < columns*columnWidth; x+=columnWidth) {
-          var imageData = ctx.getImageData(x,y,columnWidth,rowHeight).data;
           
+          var filteredImageData = ctxFiltered.getImageData(x,y,columnWidth,rowHeight).data;
+          // var filteredImageData = chromaKeyFilter(imageData);
           var total = 0;
-          // for every 4th pixel in the square
-          for (var k=0; k < imageData.length; k+=16) {
-            total += imageData[k] + imageData[k+1] + imageData[k+2];
+          // for every pixel in the square
+          for (var k=0; k < filteredImageData.length; k++) {
+            if (filteredImageData[k+3] != 0) {
+              total += 1
+            }
           };
           
-          var numberOfPixels = imageData.length / 16;
-          total = total / numberOfPixels / 3; // 0-255
-          
-          var threshold = 8;
+          var threshold = 800;
           if (total > threshold) {
             ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
           }
@@ -188,10 +202,14 @@ var context = new webkitAudioContext();
         };
         newMatrix.push(row);
       };
-      matrix = newMatrix;
-      matrixUpdated && matrixUpdated(matrix);
+      // lastMatrix = currentMatrix;
+      // currentMatrix = newMatrix;
+      // matrix = mergeMatrixes(lastMatrix, currentMatrix);
+      
+      matrix = newMatrix
+      window.matrixUpdated && window.matrixUpdated(matrix);
     }
-    setInterval(detect, 1000)
+    setInterval(detect, 500)
 
     
     var yellowFish = new Image();
@@ -200,15 +218,15 @@ var context = new webkitAudioContext();
     var fishes = [{
       image: yellowFish,
       x: 0,
-      y: 320,
-      vx: 1,
-      vy: 0.8
+      y: 10,
+      vx: 0.5,
+      vy: 0.4
     },{
       image: yellowFish,
-      x: 170,
+      x: 70,
       y: 20,
-      vx: 1,
-      vy: 1.2
+      vx: 0.5,
+      vy: 0.6
     }];
 
     function setMouse() {
@@ -227,14 +245,48 @@ var context = new webkitAudioContext();
     }
     canvasElement.addEventListener("touchmove", touchMove, false);
     
+    // function mergeMatrixes(matrix1, matrix2) {
+    //   var mergedArray = [];
+    //   for (var i=0; i < matrix1.length; i++) {
+    //     var row1 = matrix1[i];
+    //     var row2 = matrix2[i];
+    //     var mergedRow = [];
+    //     for (var j=0; j < row1.length; j++) {
+    //       mergedRow.push(row1[j] || row2[j])
+    //     };
+    //   };
+    //   return mergedArray;
+    // }
+    // 
+    function chromaKeyFilter(image) {
+      var l = image.data.length / 4;
+      for (var i = 0; i < l; i++) {
+        var r = image.data[i * 4 + 0];
+        var g = image.data[i * 4 + 1];
+        var b = image.data[i * 4 + 2];
+        if (g > 100 && r < 100 && b < 100)
+          image.data[i * 4 + 3] = 0;
+      }
+      
+      ctxFiltered.putImageData(image, 0, 0);
+      
+      return image.data;
+    }
+    
+    
+    
+    
     
   </script>
   
   <style type="text/css" media="screen">
-    canvas {
+/*    canvas {
       position: absolute;
       top: 0;
       left: 0;
+    }*/
+    canvas {
+      border: 1px solid black;
     }
   </style>
 </body>
