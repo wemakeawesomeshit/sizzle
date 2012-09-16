@@ -25,9 +25,9 @@
 
   <video id="webcam" autoplay></video>
 
-  <canvas width="300" height="150" id="canvasElement"></canvas>
-  <canvas width="300" height="150" id="canvasFiltered"></canvas>
-  <canvas width="300" height="150" id="canvasOverlay"></canvas>
+  <canvas width="360" height="240" id="canvasElement"></canvas>
+  <canvas width="360" height="240" id="canvasFiltered"></canvas>
+  <canvas width="360" height="240" id="canvasOverlay"></canvas>
   
   <script type="text/javascript">
 var context = new webkitAudioContext();
@@ -38,7 +38,7 @@ var context = new webkitAudioContext();
 
     var playmarker = document.getElementById("playmarker");
 
-    var width = 300;
+    var width = 360;
 
     var activeColumn = -1;
 
@@ -71,7 +71,7 @@ var context = new webkitAudioContext();
     ];
 
     playNote = function(index) {
-      if (index === -1) return;
+      if (index === -1 || !notes[index]) return;
       var audio = new Audio();
       audio.src = notes[index];
       audio.position = 0;
@@ -88,6 +88,7 @@ var context = new webkitAudioContext();
     }
     
     columnChange = function() {
+      if (!matrix[activeColumn]) return;
       for (var i = 0, len = matrix[activeColumn].length; i < len; i++) {
         if (matrix[activeColumn][i] === true) {
           playNote(i);
@@ -123,17 +124,17 @@ var context = new webkitAudioContext();
     var ctxFiltered = canvasFiltered.getContext('2d');
 
     var x, y;
-    var width = 300;
-    var height = 150
+    var width = 360;
+    var height = 240
 
    
     
     function detect() {
       
-      ctxOverlay.clearRect(0,0,300,150);
-      ctxOverlay.fillStyle = "rgba(255,200,0,1)";
+      ctxOverlay.clearRect(0,0,360,240);
+      ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
       
-      var image = ctx.getImageData(0,0,300,150);
+      var image = ctx.getImageData(0,0,360,240);
       var filteredImageData = chromaKeyFilter(image);
       
       var imageData = image.data;
