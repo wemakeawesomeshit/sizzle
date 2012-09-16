@@ -2,6 +2,8 @@
 <html>
 <head>
   <script src='js/audiobuffer.js'></script>
+  <script src='js/jquery-1.6.2.js'></script>
+
 </head>
 <body>
 
@@ -32,10 +34,33 @@
   <canvas width="200" height="133" id="canvasOverlay"></canvas>
   
   <div id="log" style="position:absolute;top:10px;right:10px;">
-
+    <p>
+      <label>Webcam Left</label>
+      <input id="webcamTop" type="range" min="-200" step=1 max="0" />
+    </p>
+    <p>
+      <label>Webcam Top</label>
+      <input id="webcamLeft" type="range" min="-200" step=1 max="0" />
+    </p>
+    <p>
+      <label>Webcam Width</label>
+      <input id="webcamWidth" type="range" min="0" step=1 max="300" />
+    </p>
+    <p>
+      <label>Webcam Height</label>
+      <input id="webcamHeight" type="range" min="0" step=1 max="200" />
+    </p>
   </div>
 
   <script type="text/javascript">
+
+  
+
+
+
+
+
+
 var context = new webkitAudioContext();
     
   var timeDelay = 50;
@@ -56,6 +81,32 @@ var context = new webkitAudioContext();
     var width = 200;
     var height = 133
     var activeColumn = -1;
+
+    var webcamStart = {
+      top:0,
+      left:0
+    }
+
+    var webcamSize = {
+      width:width,
+      height:height
+    }
+
+
+    $(document).ready(function() {
+      $('#webcamTop').change(function() {
+        webcamStart.top = $(this).val();
+      });
+      $('#webcamLeft').change(function() {
+        webcamStart.left = $(this).val();
+      });
+      $('#webcamWidth').change(function() {
+        webcamSize.width = $(this).val();
+      });
+      $('#webcamHeight').change(function() {
+        webcamSize.height = $(this).val();
+      });
+    });
 
     var rows = 8;
     var columns = 16;
@@ -334,7 +385,10 @@ else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUse
 
 
        function draw(v,c,w,h) {
-          c.drawImage(v,0,0,w,h);
+
+
+
+          c.drawImage(v,webcamStart.top,webcamStart.left,webcamSize.width,webcamSize.height);
           setTimeout(draw,timeDelay,v,c,w,h);
       }
 
