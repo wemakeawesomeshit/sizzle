@@ -33,7 +33,7 @@
 var context = new webkitAudioContext();
 
     
-
+  var timeDelay = 500;
 
 
     var playmarker = document.getElementById("playmarker");
@@ -71,6 +71,7 @@ var context = new webkitAudioContext();
     ];
 
     playNote = function(index) {
+      if (index === -1) return;
       var audio = new Audio();
       audio.src = notes[index];
       audio.position = 0;
@@ -96,7 +97,7 @@ var context = new webkitAudioContext();
     
     
     movePlaymarker = function() {
-      var left = playmarker.style.left.replace("px", "") * 1 + 10;
+      var left = playmarker.style.left.replace("px", "") * 1 + 20;
       if (left > width) {
         left = 0;
       }
@@ -111,7 +112,7 @@ var context = new webkitAudioContext();
       playmarker.style.left = left + "px";
     }
     
-    setInterval(movePlaymarker, 10);
+    setInterval(movePlaymarker, 20);
 
 
 
@@ -125,54 +126,7 @@ var context = new webkitAudioContext();
     var width = 300;
     var height = 150
 
-    function redraw() {
-      return;
-      ctx.clearRect(0,0,300,150);
-      // ctx.fillStyle = "#FEBB26";
-      ctx.fillStyle = "#0144D9";
-      ctx.fillStyle = "#000";
-      ctx.fillStyle = "#00FF00";
-      
-      // ctx.fillRect(0,0,300,150);
-      
-      var bg = new Image();
-      // bg.src = "images/greenbg.jpg";
-      // ctx.drawImage(bg, 0, 0, 425, 318, 0, 0, 300, 150)
-      
-      bg.src = "images/realtalk.png";
-      // bg.src = "images/gay2.jpg";
-      ctx.drawImage(bg, 0, 0, 746, 338, 0, 0, 300, 150)
-      
-      
-      var i = fishes.length;
-      while (i--) {
-        var fish = fishes[i];
-        var image = fish.image;
-        
-        if ((fish.y + image.height*0.25) > 150 || fish.y < 0) {
-          fish.vy = fish.vy * -1
-        }
-        
-        if ((fish.x + image.width*0.25) > 300 || fish.x < 0) {
-          fish.vx = fish.vx * -1
-        }
-        
-        fish.x += fish.vx;
-        fish.y += fish.vy
-        
-        sh = image.height
-        dh = image.height*0.25
-        sy = 0;
-        dy = fish.y;
-        sx = 0
-        dx = fish.x
-        sw = image.width
-        dw = image.width*0.25
-        ctx.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
-      }
-    }
-    
-    //setInterval(redraw, 30)
+   
     
     function detect() {
       
@@ -220,41 +174,9 @@ var context = new webkitAudioContext();
       matrix = newMatrix
       window.matrixUpdated && window.matrixUpdated(matrix);
     }
-    setInterval(detect, 500)
+    setInterval(detect, timeDelay)
 
     
-    var yellowFish = new Image();
-    yellowFish.src = "images/yellow.png";
-    
-    var fishes = [{
-      image: yellowFish,
-      x: 0,
-      y: 10,
-      vx: 0.5,
-      vy: 0.4
-    },{
-      image: yellowFish,
-      x: 70,
-      y: 20,
-      vx: 0.5,
-      vy: 0.6
-    }];
-
-    function setMouse() {
-      x = window.event.offsetX;
-      y = window.event.offsetY; 
-      redraw()
-    }  
-    canvasElement.onmousemove = setMouse
-    
-    function touchMove(event) {
-      event.preventDefault();
-      var touch = event.changedTouches[0];
-      x = touch.pageX;  
-      y = touch.pageY;
-      redraw()
-    }
-    canvasElement.addEventListener("touchmove", touchMove, false);
     
     // function mergeMatrixes(matrix1, matrix2) {
     //   var mergedArray = [];
@@ -269,6 +191,7 @@ var context = new webkitAudioContext();
     //   return mergedArray;
     // }
     // 
+    
     function chromaKeyFilter(image) {
       var l = image.data.length / 4;
       for (var i = 0; i < l; i++) {
@@ -360,7 +283,7 @@ else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUse
 
        function draw(v,c,w,h) {
           c.drawImage(v,0,0,w,h);
-          setTimeout(draw,20,v,c,w,h);
+          setTimeout(draw,timeDelay,v,c,w,h);
       }
 
       
@@ -382,13 +305,16 @@ else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUse
   </script>
   
   <style type="text/css" media="screen">
-/*    canvas {
+    canvas {
       position: absolute;
       top: 0;
       left: 0;
-    }*/
+    }
     canvas {
       border: 1px solid black;
+    }
+    #canvasFiltered {
+      display: none;
     }
   </style>
 </body>
