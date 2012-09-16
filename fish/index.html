@@ -1,61 +1,119 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html lang="en" class="no-js ie6 oldie"> <![endif]-->
-<!--[if IE 7]>    <html lang="en" class="no-js ie7 oldie"> <![endif]-->
-<!--[if IE 8]>    <html lang="en" class="no-js ie8 oldie"> <![endif]-->
-<!--[if gt IE 8]><!-->
-<html class='no-js' lang='en'>
-  <!--<![endif]-->
-  <head>
-    <meta charset='utf-8' />
-    <meta content='IE=edge,chrome=1' http-equiv='X-UA-Compatible' />
-    <title></title>
-    <meta content='' name='description' />
-    <meta content='' name='author' />
-    <meta content='width=device-width, initial-scale=1.0' name='viewport' />
-    <link href='css/style.css' rel='stylesheet' />
-    <script src='js/modernizr-2.0.6.min.js'></script>
-  </head>
-  <body>
-    <style>
-    #webcam {
-      width:100%;
-      height:100%;
+<html>
+<head>
+  <script src='js/audiobuffer.js'></script>
+</head>
+<body>
+
+  <style>
+    #playmarker {
+      width:0px;
+      height:5px;
+      background:#0f0;
+      z-index:99999;
+      transition:20ms width linear;
       position:fixed;
       top:0;
       left:0;
-      bottom:0;
-      right:0;
+    }
+    #webcam {
+      visibility: hidden;
+      display:none;
     }
   </style>
-    <video id="webcam" autoplay></video>
-    <canvas id="canvas-source" width="640" height="480"></canvas>
-    <canvas id="canvas-blended" width="640" height="480"></canvas>
-    <div class="motion-cam">Motion cam</div>
 
 
+  <div id="playmarker"></div>
+
+  <video id="webcam" autoplay></video>
+
+  <canvas width="200" height="133" id="canvasElement"></canvas>
+  <canvas width="200" height="133" id="canvasFiltered"></canvas>
+  <canvas width="200" height="133" id="canvasOverlay"></canvas>
+  
+  <div id="log" style="position:absolute;top:10px;right:10px;">
+
+  </div>
+
+  <script type="text/javascript">
+var context = new webkitAudioContext();
     
-    <div id='container'>
-      <header></header>
-      <div id='main' role='main'></div>
-      <footer></footer>
-    </div>
-    <script src='//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js'></script>
-    <script>
-      window.jQuery || document.write("<script src='js/jquery-1.6.2.min.js'>\x3C/script>")
-    </script>
-    <script src='js/plugins.js'></script>
-    <script src='js/script.js'></script>
-    <script>
-      var _gaq=[["_setAccount","UA-XXXXX-X"],["_trackPageview"],["_trackPageLoadTime"]];
-      (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.async=1;
-      g.src=("https:"==location.protocol?"//ssl":"//www")+".google-analytics.com/ga.js";
-      s.parentNode.insertBefore(g,s)}(document,"script"));
-    </script>
-    <!--[if lt IE 7]>
-    <script src='//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js'></script>
-    <script>
-      window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})});
-    </script>
-    <![endif]-->
-  </body>
+  var timeDelay = 50;
+
+  var webCamActive = false;
+
+  /*
+    TODO
+    - audio distortion
+    - checking right hand side audio
+
+
+   */
+
+
+    var playmarker = document.getElementById("playmarker");
+
+    var width = 200;
+    var height = 133
+    var activeColumn = -1;
+
+    var rows = 8;
+    var columns = 16;
+
+    var currentMatrix = [];
+    var previousMatrix = [];
+    var matrix = [];
+
+    for (var i = 0; i < rows; i++) {
+      var arr = [];
+      for (var j = 0; j < columns; j++) {
+        arr.push(false);
+      }
+      matrix.push(arr);
+    }
+
+
+
+    var notes = [
+      "tones/tone1.wav",
+      "tones/tone2.wav",
+      "tones/tone3.wav",
+      "tones/tone4.wav",
+      "tones/tone5.wav",
+      "tones/tone6.wav",
+      "tones/tone7.wav",
+      "tones/tone8.wav",
+    ];
+
+    var context = initializeNewWebAudioContext();
+    context.loadSound('tones/tone1.wav', 'tone1');
+    context.loadSound('tones/tone2.wav', 'tone2');
+    context.loadSound('tones/tone3.wav', 'tone3');
+    context.loadSound('tones/tone4.wav', 'tone4');
+    context.loadSound('tones/tone5.wav', 'tone5');
+    context.loadSound('tones/tone6.wav', 'tone6');
+    context.loadSound('tones/tone7.wav', 'tone7');
+    context.loadSound('tones/tone8.wav', 'tone8');
+
+
+    playNote = function(index) {
+      if (index === -1 || !notes[index]) return;
+
+      context.playSound('tone' + (index + 1));
+
+    }
+
+    var i = 0;
+
+    var t = setInterval(function() {
+      i++;
+      i = i % 8
+
+
+
+      playNote(i);
+    }, 300);
+
+</script>
+</body>
 </html>

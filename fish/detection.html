@@ -27,9 +27,9 @@
 
   <video id="webcam" autoplay></video>
 
-  <canvas width="360" height="240" id="canvasElement"></canvas>
-  <canvas width="360" height="240" id="canvasFiltered"></canvas>
-  <canvas width="360" height="240" id="canvasOverlay"></canvas>
+  <canvas width="200" height="133" id="canvasElement"></canvas>
+  <canvas width="200" height="133" id="canvasFiltered"></canvas>
+  <canvas width="200" height="133" id="canvasOverlay"></canvas>
   
   <div id="log" style="position:absolute;top:10px;right:10px;">
 
@@ -37,17 +37,24 @@
 
   <script type="text/javascript">
 var context = new webkitAudioContext();
-
     
-  var timeDelay = 500;
+  var timeDelay = 50;
 
   var webCamActive = false;
+
+  /*
+    TODO
+    - audio distortion
+    - checking right hand side audio
+
+
+   */
 
 
     var playmarker = document.getElementById("playmarker");
 
-    var width = 360;
-
+    var width = 200;
+    var height = 133
     var activeColumn = -1;
 
     var rows = 8;
@@ -107,7 +114,23 @@ var context = new webkitAudioContext();
     
     columnChange = function(column) {
       activeColumn = column;
-      if (!matrix[column]) return;
+
+      // for each row check the column
+      for (var i = 0; i < rows; i++ ) {
+        var row = matrix[i];
+        if (row[column] === true) {
+          playNote(i);
+        }
+      }
+      return;
+
+
+
+
+      if (!matrix[column]) {
+        console.log("dropped column");
+        return;
+      }
       for (var i = 0, len = matrix[column].length; i < len; i++) {
         if (matrix[column][i] === true) {
           playNote(i);
@@ -133,7 +156,7 @@ var context = new webkitAudioContext();
       playmarker.style.width = playMarkerLeft + "px";
     }
     
-    setInterval(movePlaymarker, 20);
+    setInterval(movePlaymarker, 100);
 
 
 
@@ -144,20 +167,18 @@ var context = new webkitAudioContext();
     var ctxFiltered = canvasFiltered.getContext('2d');
 
     var x, y;
-    var width = 360;
-    var height = 240
 
-   
+    var threshold = 150;
     
     function detect() {
       if (!webCamActive) return;
       ctxOverlay.clearRect(0,0,360,240);
       ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
+     
       
       var image = ctx.getImageData(0,0,360,240);
       var filteredImageData = chromaKeyFilter(image);
       
-      var imageData = image.data;
       
       var rowHeight = height / rows;
       var columnWidth = width / columns;
@@ -165,33 +186,34 @@ var context = new webkitAudioContext();
       var newMatrix = [];
 
 
-
-
-      
-      // for each row
-      for (var y=0; y < rows*rowHeight; y+=rowHeight) {
-        var row = [];
-        // for each column
-        for (var x=0; x < columns*columnWidth; x+=columnWidth) {
-          
-          var filteredImageData = ctxFiltered.getImageData(x,y,columnWidth,rowHeight).data;
-          // var filteredImageData = chromaKeyFilter(imageData);
-          var total = 0;
-          // for every pixel in the square
-          for (var k=0; k < filteredImageData.length; k++) {
-            if (filteredImageData[k+3] != 0) {
-              total += 1
-            }
-          };
-          
-          var threshold = 150;
-          if (total > threshold) {
-            if (x / columnWidth === activeColumn) {
+      function drawSquare(x, y) {
+        if (x / columnWidth === activeColumn) {
               ctxOverlay.fillStyle = "rgba(0,200,0,0.5)";
             } else {
               ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
             }
             ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
+      }
+
+      
+      // for each row
+      for (var y=0, lenY = rows * rowHeight; y < lenY; y+=rowHeight) {
+        var row = [];
+        // for each column
+        for (var x=0, lenX = columns * columnWidth; x < lenX; x+=columnWidth) {
+          
+          var filteredImageData = ctxFiltered.getImageData(x,y,columnWidth,rowHeight).data;
+          // var filteredImageData = chromaKeyFilter(imageData);
+          var total = 0;
+          // for every pixel in the square
+          for (var k=0, lenK = filteredImageData.length; k < lenK; k++) {
+            if (filteredImageData[k+3] != 0) {
+              total += 1
+            }
+          };
+          
+          if (total > threshold) {
+            drawSquare(x, y);
           }
           row.push(total > threshold);
         };
@@ -233,8 +255,8 @@ var context = new webkitAudioContext();
           // image.data[i * 4 + 3] = 0;
         
         // If more green than others
-        // if (g > r && g > b)
-            // image.data[i * 4 + 3] = 0;
+         if (g > r && g > b)
+             image.data[i * 4 + 3] = 0;
           
         
         // if orange
@@ -244,10 +266,10 @@ var context = new webkitAudioContext();
         //   if (hsl.l < 0.4) image.data[i * 4 + 3] = 0;
         
         // if not green
-        var hsl = rgbToHsl(r,g,b);
-          if (!(hsl.h > 0.5 || hsl.h < 0.17)) image.data[i * 4 + 3] = 0;
-           if (hsl.s < 0.1) image.data[i * 4 + 3] = 0;
-           if (hsl.l < 0.1) image.data[i * 4 + 3] = 0;
+          // var hsl = rgbToHsl(r,g,b);
+          //   if (!(hsl.h > 0.5 || hsl.h < 0.17)) image.data[i * 4 + 3] = 0;
+          //    if (hsl.s < 0.1) image.data[i * 4 + 3] = 0;
+          //    if (hsl.l < 0.1) image.data[i * 4 + 3] = 0;
         
       }
       
