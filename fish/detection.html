@@ -60,44 +60,33 @@ var context = new webkitAudioContext();
     var rows = 8;
     var columns = 16;
 
-    var currentMatrix = [];
-    var previousMatrix = [];
-    var matrix = [];
+    // var currentMatrix = [];
+    // var previousMatrix = [];
+    // var matrix = [];
+    // 
+    // for (var i = 0; i < rows; i++) {
+    //   var arr = [];
+    //   for (var j = 0; j < columns; j++) {
+    //     arr.push(false);
+    //   }
+    //   matrix.push(arr);
+    // }
 
-    for (var i = 0; i < rows; i++) {
-      var arr = [];
-      for (var j = 0; j < columns; j++) {
-        arr.push(false);
-      }
-      matrix.push(arr);
-    }
 
-
-
-    var notes = [
-      "tones/tone1.wav",
-      "tones/tone2.wav",
-      "tones/tone3.wav",
-      "tones/tone4.wav",
-      "tones/tone5.wav",
-      "tones/tone6.wav",
-      "tones/tone7.wav",
-      "tones/tone8.wav",
-    ];
 
     var context = initializeNewWebAudioContext();
-    context.loadSound('tones/tone1.wav', 'tone1');
-    context.loadSound('tones/tone2.wav', 'tone2');
-    context.loadSound('tones/tone3.wav', 'tone3');
-    context.loadSound('tones/tone4.wav', 'tone4');
-    context.loadSound('tones/tone5.wav', 'tone5');
-    context.loadSound('tones/tone6.wav', 'tone6');
-    context.loadSound('tones/tone7.wav', 'tone7');
-    context.loadSound('tones/tone8.wav', 'tone8');
+    context.loadSound('tones/tone8.wav', 'tone1');
+    context.loadSound('tones/tone7.wav', 'tone2');
+    context.loadSound('tones/tone6.wav', 'tone3');
+    context.loadSound('tones/tone5.wav', 'tone4');
+    context.loadSound('tones/tone4.wav', 'tone5');
+    context.loadSound('tones/tone3.wav', 'tone6');
+    context.loadSound('tones/tone2.wav', 'tone7');
+    context.loadSound('tones/tone1.wav', 'tone8');
 
 
     playNote = function(index) {
-      if (index === -1 || !notes[index]) return;
+      if (index === -1) return;
 
       context.playSound('tone' + (index + 1));
 
@@ -107,12 +96,13 @@ var context = new webkitAudioContext();
 
 
 
-
-    matrixUpdated = function() {
-    
-    }
+    // 
+    // matrixUpdated = function() {
+    // 
+    // }
     
     columnChange = function(column) {
+      var matrix = combinedMatrixes();
       activeColumn = column;
 
       // for each row check the column
@@ -168,13 +158,33 @@ var context = new webkitAudioContext();
 
     var x, y;
 
-    var threshold = 150;
+    var threshold = 125;
+    
+    function drawOverlay() {
+      ctxOverlay.clearRect(0,0,360,240);
+      ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
+          var rowHeight = height / rows;
+          var columnWidth = width / columns;
+      var matrix = combinedMatrixes();
+      for (var i=0; i < matrix.length; i++) {
+        for (var j=0; j < matrix[i].length; j++) {
+          if (matrix[i][j]) drawSquare(j*columnWidth,i*rowHeight);
+          
+        };
+      };
+      
+      function drawSquare(x, y) {
+        if (x / columnWidth === activeColumn) {
+              ctxOverlay.fillStyle = "rgba(0,200,0,0.5)";
+            } else {
+              ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
+            }
+            ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
+      }
+    };
     
     function detect() {
       if (!webCamActive) return;
-      ctxOverlay.clearRect(0,0,360,240);
-      ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
-     
       
       var image = ctx.getImageData(0,0,360,240);
       var filteredImageData = chromaKeyFilter(image);
@@ -184,16 +194,6 @@ var context = new webkitAudioContext();
       var columnWidth = width / columns;
       
       var newMatrix = [];
-
-
-      function drawSquare(x, y) {
-        if (x / columnWidth === activeColumn) {
-              ctxOverlay.fillStyle = "rgba(0,200,0,0.5)";
-            } else {
-              ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
-            }
-            ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
-      }
 
       
       // for each row
@@ -212,37 +212,42 @@ var context = new webkitAudioContext();
             }
           };
           
-          if (total > threshold) {
-            drawSquare(x, y);
-          }
           row.push(total > threshold);
         };
         newMatrix.push(row);
       };
-      // lastMatrix = currentMatrix;
-      // currentMatrix = newMatrix;
-      // matrix = mergeMatrixes(lastMatrix, currentMatrix);
-      
-      matrix = newMatrix
-      window.matrixUpdated && window.matrixUpdated(matrix);
+      addMatrix(newMatrix);
+      drawOverlay()
     }
-    setInterval(detect, timeDelay)
+    setInterval(detect, timeDelay);
 
     
+    var oldMatrixes = [];
+    function addMatrix(newMatrix) {
+      if (oldMatrixes.length > 200) oldMatrixes.pop() // pop oldest
+      oldMatrixes.unshift(newMatrix); // add new matrix
+    }
     
-    // function mergeMatrixes(matrix1, matrix2) {
-    //   var mergedArray = [];
-    //   for (var i=0; i < matrix1.length; i++) {
-    //     var row1 = matrix1[i];
-    //     var row2 = matrix2[i];
-    //     var mergedRow = [];
-    //     for (var j=0; j < row1.length; j++) {
-    //       mergedRow.push(row1[j] || row2[j])
-    //     };
-    //   };
-    //   return mergedArray;
-    // }
-    // 
+    function combinedMatrixes() {
+      combinedMatrix = [];
+      // for each row in the matrix
+      for (var i=0; i < rows; i++) {
+        combinedMatrix.push([]);
+        // for each cell in the row
+        for (var j=0; j < columns; j++) {
+          // for each old matrix
+          var isSelected = false;
+          for (var k=0; k < oldMatrixes.length; k++) {
+            if (oldMatrixes[k][i][j]) {
+              isSelected = true;
+            }
+          }
+          combinedMatrix[i][j] = isSelected;
+        }
+      }
+      return combinedMatrix;
+    }
+    
     
     function chromaKeyFilter(image) {
       var l = image.data.length / 4;
@@ -256,6 +261,9 @@ var context = new webkitAudioContext();
         
         // If more green than others
          if (g > r && g > b)
+             image.data[i * 4 + 3] = 0;
+        
+         if (g > 200 && r > 200 && b > 200)
              image.data[i * 4 + 3] = 0;
           
         
