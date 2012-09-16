@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <script src='js/audiobuffer.js'></script>
 </head>
 <body>
 
   <style>
     #playmarker {
-      width:2px;
-      height:600px;
+      width:0px;
+      height:5px;
       background:#0f0;
       z-index:99999;
+      transition:20ms width linear;
       position:fixed;
       top:0;
       left:0;
@@ -29,11 +31,17 @@
   <canvas width="360" height="240" id="canvasFiltered"></canvas>
   <canvas width="360" height="240" id="canvasOverlay"></canvas>
   
+  <div id="log" style="position:absolute;top:10px;right:10px;">
+
+  </div>
+
   <script type="text/javascript">
 var context = new webkitAudioContext();
 
     
   var timeDelay = 500;
+
+  var webCamActive = false;
 
 
     var playmarker = document.getElementById("playmarker");
@@ -70,12 +78,22 @@ var context = new webkitAudioContext();
       "tones/tone8.wav",
     ];
 
+    var context = initializeNewWebAudioContext();
+    context.loadSound('tones/tone1.wav', 'tone1');
+    context.loadSound('tones/tone2.wav', 'tone2');
+    context.loadSound('tones/tone3.wav', 'tone3');
+    context.loadSound('tones/tone4.wav', 'tone4');
+    context.loadSound('tones/tone5.wav', 'tone5');
+    context.loadSound('tones/tone6.wav', 'tone6');
+    context.loadSound('tones/tone7.wav', 'tone7');
+    context.loadSound('tones/tone8.wav', 'tone8');
+
+
     playNote = function(index) {
       if (index === -1 || !notes[index]) return;
-      var audio = new Audio();
-      audio.src = notes[index];
-      audio.position = 0;
-      audio.play();
+
+      context.playSound('tone' + (index + 1));
+
     }
 
 
@@ -87,30 +105,32 @@ var context = new webkitAudioContext();
     
     }
     
-    columnChange = function() {
-      if (!matrix[activeColumn]) return;
-      for (var i = 0, len = matrix[activeColumn].length; i < len; i++) {
-        if (matrix[activeColumn][i] === true) {
+    columnChange = function(column) {
+      activeColumn = column;
+      if (!matrix[column]) return;
+      for (var i = 0, len = matrix[column].length; i < len; i++) {
+        if (matrix[column][i] === true) {
           playNote(i);
         }
       }
     }
     
+
+    var playMarkerLeft = 0;
     
     movePlaymarker = function() {
-      var left = playmarker.style.left.replace("px", "") * 1 + 20;
-      if (left > width) {
-        left = 0;
+      playMarkerLeft += 5;
+      if (playMarkerLeft > width) {
+        playMarkerLeft = 0;
       }
     
-      var newActiveColumn = parseInt(left / (width / columns));
+      var thisColumn = parseInt(playMarkerLeft / (width / columns));
     
-      if (newActiveColumn !== activeColumn) {
-        activeColumn = newActiveColumn;
-        columnChange();
+      if (thisColumn !== activeColumn) {
+        columnChange(thisColumn);
       }
-    
-      playmarker.style.left = left + "px";
+
+      playmarker.style.width = playMarkerLeft + "px";
     }
     
     setInterval(movePlaymarker, 20);
@@ -130,7 +150,7 @@ var context = new webkitAudioContext();
    
     
     function detect() {
-      
+      if (!webCamActive) return;
       ctxOverlay.clearRect(0,0,360,240);
       ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
       
@@ -143,6 +163,10 @@ var context = new webkitAudioContext();
       var columnWidth = width / columns;
       
       var newMatrix = [];
+
+
+
+
       
       // for each row
       for (var y=0; y < rows*rowHeight; y+=rowHeight) {
@@ -162,6 +186,11 @@ var context = new webkitAudioContext();
           
           var threshold = 150;
           if (total > threshold) {
+            if (x / columnWidth === activeColumn) {
+              ctxOverlay.fillStyle = "rgba(0,200,0,0.5)";
+            } else {
+              ctxOverlay.fillStyle = "rgba(255,200,0,0.5)";
+            }
             ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
           }
           row.push(total > threshold);
@@ -279,7 +308,7 @@ else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUse
 
       navigator.getUserMedia({audio: true, video: true}, function(stream) {
        video.src = window.URL.createObjectURL(stream);
-
+       webCamActive = true;
 
 
        function draw(v,c,w,h) {
