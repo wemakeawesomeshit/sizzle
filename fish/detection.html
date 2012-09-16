@@ -14,10 +14,16 @@
       top:0;
       left:0;
     }
+    #webcam {
+      visibility: hidden;
+      display:none;
+    }
   </style>
+
 
   <div id="playmarker"></div>
 
+  <video id="webcam" autoplay></video>
 
   <canvas width="300" height="150" id="canvasElement"></canvas>
   <canvas width="300" height="150" id="canvasFiltered"></canvas>
@@ -76,36 +82,36 @@ var context = new webkitAudioContext();
 
 
 
-    // matrixUpdated = function() {
-    // 
-    // }
-    // 
-    // columnChange = function() {
-    //   for (var i = 0, len = matrix[activeColumn].length; i < len; i++) {
-    //     if (matrix[activeColumn][i] === true) {
-    //       playNote(i);
-    //     }
-    //   }
-    // }
-    // 
-    // 
-    // movePlaymarker = function() {
-    //   var left = playmarker.style.left.replace("px", "") * 1 + 10;
-    //   if (left > width) {
-    //     left = 0;
-    //   }
-    // 
-    //   var newActiveColumn = parseInt(left / (width / columns));
-    // 
-    //   if (newActiveColumn !== activeColumn) {
-    //     activeColumn = newActiveColumn;
-    //     columnChange();
-    //   }
-    // 
-    //   playmarker.style.left = left + "px";
-    // }
-    // 
-    // setInterval(movePlaymarker, 10);
+    matrixUpdated = function() {
+    
+    }
+    
+    columnChange = function() {
+      for (var i = 0, len = matrix[activeColumn].length; i < len; i++) {
+        if (matrix[activeColumn][i] === true) {
+          playNote(i);
+        }
+      }
+    }
+    
+    
+    movePlaymarker = function() {
+      var left = playmarker.style.left.replace("px", "") * 1 + 10;
+      if (left > width) {
+        left = 0;
+      }
+    
+      var newActiveColumn = parseInt(left / (width / columns));
+    
+      if (newActiveColumn !== activeColumn) {
+        activeColumn = newActiveColumn;
+        columnChange();
+      }
+    
+      playmarker.style.left = left + "px";
+    }
+    
+    setInterval(movePlaymarker, 10);
 
 
 
@@ -120,6 +126,7 @@ var context = new webkitAudioContext();
     var height = 150
 
     function redraw() {
+      return;
       ctx.clearRect(0,0,300,150);
       // ctx.fillStyle = "#FEBB26";
       ctx.fillStyle = "#0144D9";
@@ -165,7 +172,7 @@ var context = new webkitAudioContext();
       }
     }
     
-    setInterval(redraw, 30)
+    //setInterval(redraw, 30)
     
     function detect() {
       
@@ -198,7 +205,7 @@ var context = new webkitAudioContext();
             }
           };
           
-          var threshold = 800;
+          var threshold = 150;
           if (total > threshold) {
             ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
           }
@@ -319,6 +326,59 @@ var context = new webkitAudioContext();
 
         return {h:h, s:s, l:l};
     }
+
+
+
+    var video;
+
+if (navigator.getUserMedia) {}
+else if (navigator.webkitGetUserMedia) { navigator.getUserMedia = navigator.webkitGetUserMedia}
+else if (navigator.mozGetUserMedia) { navigator.getUserMedia = navigator.mozGetUserMedia}
+else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUserMedia}
+
+
+
+
+
+   var onFailSoHard = function(e) {
+    console.log('Reeeejected!', e);
+  };
+
+
+  window.URL = window.URL || window.webkitURL;
+  navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
+                            navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+  video = document.querySelector('video');
+
+  if (navigator.getUserMedia) {
+
+      navigator.getUserMedia({audio: true, video: true}, function(stream) {
+       video.src = window.URL.createObjectURL(stream);
+
+
+
+       function draw(v,c,w,h) {
+          c.drawImage(v,0,0,w,h);
+          setTimeout(draw,20,v,c,w,h);
+      }
+
+      
+
+      console.log(ctx);
+
+      draw(video, ctx, canvasElement.clientWidth, canvasElement.clientHeight);
+
+
+       //initialize();
+      }, onFailSoHard);
+    
+
+  } else {
+    video.src = 'somevideo.webm'; // fallback.
+  }
+
+
   </script>
   
   <style type="text/css" media="screen">
