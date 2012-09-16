@@ -26,7 +26,7 @@
   <video id="webcam" autoplay></video>
 
   <canvas width="360" height="240" id="canvasElement"></canvas>
-  <canvas width="360" height="240" id="canvasFiltered"></canvas>
+  <!-- <canvas width="360" height="240" id="canvasFiltered"></canvas> -->
   <canvas width="360" height="240" id="canvasOverlay"></canvas>
   
   <script type="text/javascript">
@@ -121,7 +121,7 @@ var context = new webkitAudioContext();
 
     var ctx = canvasElement.getContext('2d');
     var ctxOverlay = canvasOverlay.getContext('2d');
-    var ctxFiltered = canvasFiltered.getContext('2d');
+    // var ctxFiltered = canvasFiltered.getContext('2d');
 
     var x, y;
     var width = 360;
@@ -137,43 +137,60 @@ var context = new webkitAudioContext();
       var image = ctx.getImageData(0,0,360,240);
       var filteredImageData = chromaKeyFilter(image);
       
-      var imageData = image.data;
+      // var imageData = image.data;
       
       var rowHeight = height / rows;
       var columnWidth = width / columns;
       
       var newMatrix = [];
-      
-      // for each row
-      for (var y=0; y < rows*rowHeight; y+=rowHeight) {
+      // for each row of squares
+      // for (var i=0; i < rows; i++) {
+        i = 0
+        var startOfRowByte = i * width * 4; // number of bits down we should start for this row
+        
         var row = [];
-        // for each column
-        for (var x=0; x < columns*columnWidth; x+=columnWidth) {
+        
+        // for each square cell
+        // for (var j=0; j < columns; j++) {
+          j = 0
+          var startOfColumnByte = startOfRowByte + (j * columnWidth * 4); // number of bits down we should start for this column
           
-          var filteredImageData = ctxFiltered.getImageData(x,y,columnWidth,rowHeight).data;
-          // var filteredImageData = chromaKeyFilter(imageData);
           var total = 0;
-          // for every pixel in the square
-          for (var k=0; k < filteredImageData.length; k++) {
-            if (filteredImageData[k+3] != 0) {
-              total += 1
-            }
+          
+          // Now we're in the square, looking at its pixels
+          // for every pixel row in the square
+          for (var k=0; k < rowHeight; k++) {
+            var startOfPixelRowByte = startOfColumnByte + (k * columnWidth * 4);
+            // for every pixel in the square's row
+            for (var l=0; l < columnWidth; l++) {
+              var pixelStartByte = startOfPixelRowByte + (l * 4);
+              console.log(pixelStartByte);
+              // 
+              // if (filteredImageData[pixelStartByte+3] != 0) {
+              //   total += 1;
+              // }
+            };
+          
           };
           
-          var threshold = 150;
+          // quit if total over threshold
+          // var threshold = 150;
+          var threshold = 500
           if (total > threshold) {
+            var y = i*rowHeight;
+            var x = j*columnWidth;
             ctxOverlay.fillRect(x, y, columnWidth, rowHeight);
           }
           row.push(total > threshold);
-        };
+        // };
         newMatrix.push(row);
-      };
+      // };
+      
       // lastMatrix = currentMatrix;
       // currentMatrix = newMatrix;
       // matrix = mergeMatrixes(lastMatrix, currentMatrix);
       
       matrix = newMatrix
-      window.matrixUpdated && window.matrixUpdated(matrix);
     }
     setInterval(detect, timeDelay)
 
@@ -194,37 +211,23 @@ var context = new webkitAudioContext();
     // 
     
     function chromaKeyFilter(image) {
-      var l = image.data.length / 4;
+      var imageData = image.data;
+      var l = imageData.length / 4;
       for (var i = 0; i < l; i++) {
-        var r = image.data[i * 4 + 0];
-        var g = image.data[i * 4 + 1];
-        var b = image.data[i * 4 + 2];
+        var r = imageData[i * 4 + 0];
+        var g = imageData[i * 4 + 1];
+        var b = imageData[i * 4 + 2];
         
-        // if (g > 100 && r < 100 && b < 100)
-          // image.data[i * 4 + 3] = 0;
-        
-        // If more green than others
-        // if (g > r && g > b)
-            // image.data[i * 4 + 3] = 0;
-          
-        
-        // if orange
-        // var hsl = rgbToHsl(r,g,b);
-        //   if (hsl.h > 0.18 || hsl.h < 0.038) image.data[i * 4 + 3] = 0;
-        //   if (hsl.s < 0.1) image.data[i * 4 + 3] = 0;
-        //   if (hsl.l < 0.4) image.data[i * 4 + 3] = 0;
-        
-        // if not green
         var hsl = rgbToHsl(r,g,b);
-          if (!(hsl.h > 0.5 || hsl.h < 0.17)) image.data[i * 4 + 3] = 0;
-           if (hsl.s < 0.1) image.data[i * 4 + 3] = 0;
-           if (hsl.l < 0.1) image.data[i * 4 + 3] = 0;
-        
+        if (!(hsl.h > 0.5 || hsl.h < 0.17)) imageData[i * 4 + 3] = 0;
+        if (hsl.s < 0.1) imageData[i * 4 + 3] = 0;
+        if (hsl.l < 0.1) imageData[i * 4 + 3] = 0;
       }
       
-      ctxFiltered.putImageData(image, 0, 0);
+      // image.data = imageData;
+      // ctxFiltered.putImageData(image, 0, 0);
       
-      return image.data;
+      return imageData;
     }
     
     
@@ -288,9 +291,6 @@ else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUse
       }
 
       
-
-      console.log(ctx);
-
       draw(video, ctx, canvasElement.clientWidth, canvasElement.clientHeight);
 
 
@@ -314,9 +314,9 @@ else if (navigator.msGetUserMedia) { navigator.getUserMedia = navigator.msGetUse
     canvas {
       border: 1px solid black;
     }
-    #canvasFiltered {
-      display: none;
-    }
+/*    #canvasFiltered {*/
+/*      display: none;*/
+/*    }*/
   </style>
 </body>
 </html>
